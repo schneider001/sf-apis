@@ -38,9 +38,13 @@ type Process struct {
 	ContainerId *ContainerIdUnion `json:"containerId"`
 
 	Entry bool `json:"entry"`
+
+	Cwd string `json:"cwd"`
+
+	Env []string `json:"env"`
 }
 
-const ProcessAvroCRC64Fingerprint = "\x12~\xc3ίqO|"
+const ProcessAvroCRC64Fingerprint = "\uefb8\x83*,\x00\x02"
 
 func NewProcess() *Process {
 	return &Process{}
@@ -129,6 +133,14 @@ func writeProcess(r *Process, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	err = vm.WriteString(r.Cwd, w)
+	if err != nil {
+		return err
+	}
+	err = writeArrayString(r.Env, w)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -137,7 +149,7 @@ func (r *Process) Serialize(w io.Writer) error {
 }
 
 func (r *Process) Schema() string {
-	return "{\"fields\":[{\"name\":\"state\",\"type\":{\"name\":\"SFObjectState\",\"namespace\":\"sysflow.type\",\"symbols\":[\"CREATED\",\"MODIFIED\",\"REUP\"],\"type\":\"enum\"}},{\"name\":\"oid\",\"type\":{\"fields\":[{\"name\":\"createTS\",\"type\":\"long\"},{\"name\":\"hpid\",\"type\":\"long\"}],\"name\":\"OID\",\"namespace\":\"sysflow.type\",\"type\":\"record\"}},{\"name\":\"poid\",\"type\":[\"null\",\"sysflow.type.OID\"]},{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"exe\",\"type\":\"string\"},{\"name\":\"exeArgs\",\"type\":\"string\"},{\"name\":\"uid\",\"type\":\"int\"},{\"name\":\"userName\",\"type\":\"string\"},{\"name\":\"gid\",\"type\":\"int\"},{\"name\":\"groupName\",\"type\":\"string\"},{\"name\":\"tty\",\"type\":\"boolean\"},{\"name\":\"containerId\",\"type\":[\"null\",\"string\"]},{\"default\":false,\"name\":\"entry\",\"type\":\"boolean\"}],\"name\":\"sysflow.entity.Process\",\"type\":\"record\"}"
+	return "{\"fields\":[{\"name\":\"state\",\"type\":{\"name\":\"SFObjectState\",\"namespace\":\"sysflow.type\",\"symbols\":[\"CREATED\",\"MODIFIED\",\"REUP\"],\"type\":\"enum\"}},{\"name\":\"oid\",\"type\":{\"fields\":[{\"name\":\"createTS\",\"type\":\"long\"},{\"name\":\"hpid\",\"type\":\"long\"}],\"name\":\"OID\",\"namespace\":\"sysflow.type\",\"type\":\"record\"}},{\"name\":\"poid\",\"type\":[\"null\",\"sysflow.type.OID\"]},{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"exe\",\"type\":\"string\"},{\"name\":\"exeArgs\",\"type\":\"string\"},{\"name\":\"uid\",\"type\":\"int\"},{\"name\":\"userName\",\"type\":\"string\"},{\"name\":\"gid\",\"type\":\"int\"},{\"name\":\"groupName\",\"type\":\"string\"},{\"name\":\"tty\",\"type\":\"boolean\"},{\"name\":\"containerId\",\"type\":[\"null\",\"string\"]},{\"default\":false,\"name\":\"entry\",\"type\":\"boolean\"},{\"name\":\"cwd\",\"type\":\"string\"},{\"name\":\"env\",\"type\":{\"items\":\"string\",\"type\":\"array\"}}],\"name\":\"sysflow.entity.Process\",\"type\":\"record\"}"
 }
 
 func (r *Process) SchemaName() string {
@@ -187,6 +199,12 @@ func (r *Process) Get(i int) types.Field {
 		return r.ContainerId
 	case 12:
 		return &types.Boolean{Target: &r.Entry}
+	case 13:
+		return &types.String{Target: &r.Cwd}
+	case 14:
+		r.Env = make([]string, 0)
+
+		return &ArrayStringWrapper{Target: &r.Env}
 	}
 	panic("Unknown field index")
 }

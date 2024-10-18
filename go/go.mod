@@ -1,4 +1,4 @@
-module github.com/sysflow-telemetry/sf-apis/go
+module github.com/schneider001/sf-apis/go
 
 go 1.19
 
